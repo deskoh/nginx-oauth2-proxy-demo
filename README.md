@@ -25,7 +25,7 @@ Authenticated requests will be proxied to NodeJS server with HTTP headers echoed
 'x-email': 'user@example.org'
 ```
 
-Sign-out URL: [http://nginx.127.0.0.1.nip.io:4180/oauth2/sign_out](http://proxy.127.0.0.1.nip.io:4180/oauth2/sign_out)
+[Sign-out URL](http://nginx.127.0.0.1.nip.io:9000/oauth2/sign_out?rd=http://keycloak.127.0.0.1.nip.io:8080/auth/realms/dev/protocol/openid-connect/logout?redirect_uri=http://nginx.127.0.0.1.nip.io:9000): Signing out will clear OAuth2 Proxy cookie followed by redirect to Keycloak logout endpoint to clear Keycloak session, before final redirect to http://nginx.127.0.0.1.nip.io:9000.
 
 Access Keycloak at [http://keycloak.127.0.0.1.nip.io:8080](http://keycloak.127.0.0.1.nip.io:8080) with user=`admin`, password=`password` to check out the settings
 
