@@ -1,0 +1,89 @@
+version: '3.5'
+
+services:
+
+  proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v6.1.1
+    container_name: oauth2-proxy
+    command: --config /oauth2-proxy.cfg
+    ports:
+      - 4180:4180
+      - 443:443
+    networks:
+      - proxy-network
+    volumes:
+      - ./config/oauth2-proxy.cfg:/oauth2-proxy.cfg
+    depends_on:
+      - keycloak
+
+  keycloak:
+    image: jboss/keycloak:11.0.1
+    environment:
+      - DB_ADDR=mariadb
+      - DB_USER=keycloak
+      - DB_PASSWORD=password
+    container_name: kc
+    volumes:
+      - ./keycloak:/tmp/realm-config
+    command:
+      [
+        '-Dkeycloak.migration.action=import',
+        '-Dkeycloak.migration.provider=dir',
+        '-Dkeycloak.migration.dir=/tmp/realm-config',
+        '-Dkeycloak.migration.strategy=IGNORE_EXISTING',
+      ]
+    networks:
+      proxy-network:
+        aliases:
+          - keycloak.127.0.0.1.nip.io
+    ports:
+      - 8080:8080
+    depends_on:
+      - mariadb
+  
+  mariadb:
+    image: mariadb:10.5.5
+    environment:
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=password
+    container_name: keycloak-db
+    networks:
+      - proxy-network
+    volumes:
+      - vol-mariadb:/var/lib/mysql
+  
+  server:
+    build: ./server
+    image: server
+    user: node
+    working_dir: /usr/src/app
+    environment:
+      - NODE_ENV=production
+    ports:
+      - 8000:8000
+    command: node .
+    container_name: server
+    networks:
+      - proxy-network
+  
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 9000:80
+    container_name: nginx
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    networks:
+      - proxy-network
+    depends_on:
+      - server
+      - proxy
+
+networks:
+  proxy-network:
+    name: local
+
+volumes:
+  vol-mariadb:
