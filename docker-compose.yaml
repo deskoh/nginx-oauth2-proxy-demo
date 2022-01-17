@@ -17,7 +17,7 @@ services:
       - keycloak
 
   keycloak:
-    image: jboss/keycloak:11.0.1
+    image: jboss/keycloak:16.1.0
     environment:
       - DB_ADDR=mariadb
       - DB_USER=keycloak
