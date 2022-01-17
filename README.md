@@ -65,3 +65,17 @@ docker run --rm\
     -Dkeycloak.migration.dir=/tmp/realm-config\
     -Dkeycloak.migration.usersExportStrategy=SAME_FILE
 ```
+
+## Kubernetes Deployment
+
+OAuth2 Proxy can run as a sidecar to protect resources.
+
+A public FQDN for Identity Provider (IdP) is required to be configured (`OAUTH2_PROXY_OIDC_ISSUER_URL`). This URL is used by OAuth2 Proxy for service discovery and to redirect users to the IdP for authentication.
+
+```sh
+kubectl apply -f k8s/deployment.yaml
+
+# Port forward to OAuth2-Proxy container in pod
+kubectl port-forward server-667478cf46-w4fm7 8000:4180
+# Visit http://localhost:8000/get
+```

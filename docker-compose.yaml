@@ -42,7 +42,7 @@ services:
       - 8080:8080
     depends_on:
       - mariadb
-  
+
   mariadb:
     image: mariadb:10.5.5
     environment:
@@ -55,7 +55,7 @@ services:
       - proxy-network
     volumes:
       - vol-mariadb:/var/lib/mysql
-  
+
   server:
     image: kennethreitz/httpbin
     # environment:
@@ -65,7 +65,7 @@ services:
     container_name: server
     networks:
       - proxy-network
-  
+
   nginx:
     image: nginx:alpine
     ports:
