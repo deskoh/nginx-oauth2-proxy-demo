@@ -3,12 +3,14 @@ version: '3.5'
 services:
 
   proxy:
-    image: quay.io/oauth2-proxy/oauth2-proxy:v6.1.1
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1
     container_name: oauth2-proxy
     command: --config /oauth2-proxy.cfg
     ports:
       - 4180:4180
       - 443:443
+    environment:
+      - OAUTH2_PROXY_COOKIE_SECRET=MTExMTExMTExMTExMTExMQ==
     networks:
       - proxy-network
     volumes:
