@@ -1,6 +1,6 @@
 # NGINX with OAuth2 Proxy and Keycloak demo
 
-NGINX -> OAuth2 Proxy -> NodeJS
+NGINX -> OAuth2 Proxy -> HTTPBin
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ docker-compose rm
 docker volume prune
 ```
 
-Initiate browser login at http://nginx.127.0.0.1.nip.io:9000/ with user=`user`, password=`password`.
+Initiate browser login at http://nginx.127.0.0.1.nip.io:9000/get with user=`user`, password=`password`.
 
 Authenticated requests will be proxied to NodeJS server with HTTP headers echoed to the browser:
 

@@ -55,15 +55,11 @@ services:
       - vol-mariadb:/var/lib/mysql
   
   server:
-    build: ./server
-    image: server
-    user: node
-    working_dir: /usr/src/app
-    environment:
-      - NODE_ENV=production
+    image: kennethreitz/httpbin
+    # environment:
+    #   - "GUNICORN_CMD_ARGS=\"--capture-output --error-logfile - --access-logfile - --access-logformat \"%(h)s %(t)s %(r)s %(s)s Host: %({Host}i)s}\"\""
     ports:
-      - 8000:8000
-    command: node .
+      - 8000:80
     container_name: server
     networks:
       - proxy-network
