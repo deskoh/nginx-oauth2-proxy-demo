@@ -57,5 +57,7 @@ spec:
         args:
           - "--skip-provider-button=true"
           - "--provider=oidc"
+          - "--insecure-oidc-allow-unverified-email=true"
+          - "--http-address=0.0.0.0:4180"
         ports:
         - containerPort: 4180
