@@ -1,0 +1,109 @@
+# create headless service for external resource
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin-external-svc
+spec:
+  type: ExternalName
+  externalName: httpbin.org
+---
+# # Alternatively create headless service for external resource
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: httpbin-external-svc
+# spec:
+#   # Headless service
+#   clusterIP: None
+#   ports:
+#   - port: 80
+# ---
+# apiVersion: v1
+# kind: Endpoints
+# metadata:
+#   name: httpbin-external-svc
+# subsets:
+#   - addresses:
+#     # httpbin.org public IP address
+#     - ip: 54.221.78.73
+#     ports:
+#       - port: 80
+---
+# OAuth2-Proxy to proxy to external resource
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin-proxy
+spec:
+  selector:
+    matchLabels:
+      app: httpbin-proxy
+  template:
+    metadata:
+      labels:
+        app: httpbin-proxy
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1
+        resources:
+          limits:
+            memory: "48Mi"
+            cpu: "500m"
+        env:
+        - name: OAUTH2_PROXY_UPSTREAMS
+          value: "http://httpbin-external-svc"
+        - name: "OAUTH2_PROXY_CLIENT_ID"
+          value: "server"
+        - name: "OAUTH2_PROXY_CLIENT_SECRET"
+          value: "d1680bbb-24f3-4835-a0d9-2a7492a4cc99"
+        - name: "OAUTH2_PROXY_COOKIE_SECRET"
+          value: "MTExMTExMTExMTExMTExMQ=="
+        - name: OAUTH2_PROXY_COOKIE_REFRESH
+          value: "5m"
+        - name: OAUTH2_PROXY_COOKIE_SECURE
+          value: "false"
+        - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+          # Provide public FQDN of IdP reacheable by the proxy and public client
+          value: http://d674-180-129-106-95.ngrok.io/auth/realms/dev
+        args:
+        - "--email-domain=*"
+        - "--skip-provider-button=true"
+        - "--provider=oidc"
+        - "--insecure-oidc-allow-unverified-email=true"
+        - "--http-address=0.0.0.0:4180"
+        # Pass ID token in 'Authorization' header to upstream
+        - "--pass-authorization-header=true"
+        # Pass Access Token as 'X-Auth-Request-Access-Token' to upstream
+        - "--pass-access-token=true"
+        ports:
+        - containerPort: 4180
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin-proxy-svc
+spec:
+  selector:
+    app: httpbin-proxy
+  ports:
+  - port: 4180
+---
+# Ingress to expose httpbin proxy
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin-proxy-ingress
+spec:
+  rules:
+  - host: proxy.127.0.0.1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: httpbin-proxy-svc
+            port:
+              number: 4180
+

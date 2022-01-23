@@ -68,14 +68,51 @@ docker run --rm\
 
 ## Kubernetes Deployment
 
-OAuth2 Proxy can run as a sidecar to protect resources.
+A public FQDN of a Keycloak instance accesible from pods and browser is required. The Keycloak instance in `docker-compose.yaml` can be re-used as follows. The Keycloak instance can be exposed using `ngrok`
 
-A public FQDN for Identity Provider (IdP) is required to be configured (`OAUTH2_PROXY_OIDC_ISSUER_URL`). This URL is used by OAuth2 Proxy for service discovery and to redirect users to the IdP for authentication.
+> Update `OAUTH2_PROXY_OIDC_ISSUER_URL` to public FQDN of Keycloak in deployment files
 
 ```sh
-kubectl apply -f k8s/deployment.yaml
+# Run Keycloak and MariaDB service
+docker-compose up -d keycloak mariadb
 
-# Port forward to OAuth2-Proxy container in pod
-kubectl port-forward server-667478cf46-w4fm7 8000:4180
-# Visit http://localhost:8000/get
+# Keycloak can be referenced using `hostAlias` in local development or exposed over internet using `ngrok`:
+ngrok http 8080
 ```
+
+### Sidecar Deployment
+
+Thw following deployment runs OAuth2-Proxy a sidecar to protect resources within same pod.
+
+```sh
+kubectl apply -f k8s/sidecar.yaml
+
+# Access using Ingress: http://sidecar.127.0.0.1.nip.io/get?show_env=1
+# Or: http://localhost:8000/get?show_env=1 via port-forwarding below
+kubectl port-forward server-667478cf46-w4fm7 8000:4180
+```
+
+### Auth Reverse Proxy to Protect External Resource Outside Cluster
+
+Thw following deploymeny runs OAuth2-Proxy a Authentication Reverse Proxy to resource outside the cluster.
+
+```sh
+# Update public IP of httpbin.org in following file if using headless service
+# Visit http://proxy.127.0.0.1.nip.io/get?show_env=1
+kubectl apply -f k8s/external-resource.yaml
+```
+
+### NGINX Auth Service to Protect Ingress Resource
+
+Thw following deployment runs OAuth2-Proxy as an Authentication Service used by NGINX Ingress Controller.
+
+```sh
+# Visit http://httpbin.127.0.0.1.nip.io/get?show_env=1
+kubectl apply -f k8s/ingress-auth.yaml
+```
+
+## Reference
+
+[OAuth2 Proxy Configuration](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/overview)
+
+[NGINX Ingress Controller Annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/)

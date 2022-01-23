@@ -1,0 +1,149 @@
+# OAuth2-Proxy Authentication Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+spec:
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1
+        resources:
+          limits:
+            memory: "48Mi"
+            cpu: "500m"
+        env:
+        - name: OAUTH2_PROXY_UPSTREAMS
+          value: "file:///dev/null"
+        - name: "OAUTH2_PROXY_CLIENT_ID"
+          value: "server"
+        - name: "OAUTH2_PROXY_CLIENT_SECRET"
+          value: "d1680bbb-24f3-4835-a0d9-2a7492a4cc99"
+        - name: "OAUTH2_PROXY_COOKIE_SECRET"
+          value: "MTExMTExMTExMTExMTExMQ=="
+        - name: OAUTH2_PROXY_COOKIE_REFRESH
+          value: "5m"
+        - name: OAUTH2_PROXY_COOKIE_SECURE
+          value: "false"
+        - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+          # Provide public FQDN of IdP reacheable by the proxy and public client
+          value: http://d674-180-129-106-95.ngrok.io/auth/realms/dev
+        args:
+        - "--email-domain=*"
+        - "--skip-provider-button=true"
+        - "--provider=oidc"
+        - "--insecure-oidc-allow-unverified-email=true"
+        - "--http-address=0.0.0.0:4180"
+        # Add ID token to 'Authorization' header in auth response for NGINX to pass to upstream'
+        - "--set-authorization-header=true"
+        # Add 'X-Auth-Request-* headers in auth response for NGINX to pass to upstream'
+        - "--set-xauthrequest=true"
+        ports:
+        - containerPort: 4180
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-svc
+spec:
+  selector:
+    app: oauth2-proxy
+  ports:
+  - port: 4180
+---
+# Ingress to OAuth2-Proxy for redirect and callback URLs
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # TBD: Might be required if auth response to large (e.g. due to set-authorization-header flag)?
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+  name: oauth2-proxy
+spec:
+  rules:
+  # Refer to nginx.ingress.kubernetes.io/(auth-url|auth-signin) annotations
+  - host: httpbin.127.0.0.1.nip.io
+    http:
+      paths:
+      - pathType: Prefix
+        path: /oauth2
+        backend:
+          service:
+            name: auth-svc
+            port:
+              number: 4180
+  # tls:
+  # - hosts:
+  #   - httpbin.127.0.0.1.nip.io
+  #   secretName: __INGRESS_SECRET__
+
+---
+# Ingress Resource to be Protected
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # auth-url can be set to `http://$host/oauth2/auth` or the following (more efficient?)
+    nginx.ingress.kubernetes.io/auth-url: "http://auth-svc.default.svc.cluster.local:4180/oauth2/auth"
+    # The following auth-signin not working for different auth domain: "http://auth.127.0.0.1.nip.io/oauth2/start?rd=$pass_access_scheme://$http_host$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-signin: "http://$host/oauth2/start?rd=$escaped_request_uri"
+    # Specify headers to pass to backend once authentication request completes.
+    nginx.ingress.kubernetes.io/auth-response-headers: "x-auth-request-user, x-auth-request-email, x-auth-request-preferred-username, authorization"
+    # Fix 'upstream sent too big header while reading response header from upstream' during refresh
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+  name: httpbin-ingress
+spec:
+  rules:
+  - host: httpbin.127.0.0.1.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: httpbin-svc
+            port:
+              number: 80
+---
+# httpbin service
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin-svc
+spec:
+  selector:
+    app: httpbin
+  ports:
+  - port: 80
+---
+# httpbin deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  selector:
+    matchLabels:
+      app: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+    spec:
+      containers:
+      - name: httpbin
+        image: kennethreitz/httpbin
+        resources:
+          limits:
+            memory: "48Mi"
+            cpu: "200m"
+        ports:
+        - containerPort: 80
