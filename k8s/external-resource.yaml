@@ -50,22 +50,14 @@ spec:
           limits:
             memory: "48Mi"
             cpu: "500m"
+        envFrom:
+        - configMapRef:
+            name: oauth2-proxy-common-config
+        - secretRef:
+            name: oauth2-proxy-common-secrets
         env:
         - name: OAUTH2_PROXY_UPSTREAMS
           value: "http://httpbin-external-svc"
-        - name: "OAUTH2_PROXY_CLIENT_ID"
-          value: "server"
-        - name: "OAUTH2_PROXY_CLIENT_SECRET"
-          value: "d1680bbb-24f3-4835-a0d9-2a7492a4cc99"
-        - name: "OAUTH2_PROXY_COOKIE_SECRET"
-          value: "MTExMTExMTExMTExMTExMQ=="
-        - name: OAUTH2_PROXY_COOKIE_REFRESH
-          value: "5m"
-        - name: OAUTH2_PROXY_COOKIE_SECURE
-          value: "false"
-        - name: OAUTH2_PROXY_OIDC_ISSUER_URL
-          # Provide public FQDN of IdP reacheable by the proxy and public client
-          value: http://d674-180-129-106-95.ngrok.io/auth/realms/dev
         args:
         - "--email-domain=*"
         - "--skip-provider-button=true"
@@ -94,6 +86,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: httpbin-proxy-ingress
+  annotations:
+    # Fix for 'upstream sent too big header while reading response header from upstream'
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
 spec:
   rules:
   - host: proxy.127.0.0.1.nip.io
@@ -106,4 +101,3 @@ spec:
             name: httpbin-proxy-svc
             port:
               number: 4180
-

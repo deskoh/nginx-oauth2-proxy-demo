@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-common-config
+data:
+  OAUTH2_PROXY_CLIENT_ID: server
+  # Provide public FQDN of IdP reacheable by the proxy and public client
+  OAUTH2_PROXY_OIDC_ISSUER_URL: http://a51d-118-189-149-221.ngrok.io/auth/realms/dev
+  OAUTH2_PROXY_COOKIE_REFRESH: 5m
+  OAUTH2_PROXY_COOKIE_SECURE: "false"
+  # Optional:
+  # OAUTH2_PROXY_REDIRECT_URL: http://localhost:8000/oauth2/callback
+  # OAUTH2_PROXY_WHITELIST_DOMAINS: keycloak.127.0.0.1.nip.io:*
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth2-proxy-common-secrets
+type: Opaque
+stringData:
+  OAUTH2_PROXY_CLIENT_SECRET: d1680bbb-24f3-4835-a0d9-2a7492a4cc99
+  OAUTH2_PROXY_COOKIE_SECRET: MTExMTExMTExMTExMTExMQ==
