@@ -61,7 +61,8 @@ metadata:
 spec:
   rules:
   # Refer to nginx.ingress.kubernetes.io/(auth-url|auth-signin) annotations
-  - host: httpbin.127.0.0.1.nip.io
+  # Can use `httpbin.127.0.0.1.nip.io` as well for same domain name as upstream resource
+  - host: auth.127.0.0.1.nip.io
     http:
       paths:
       - pathType: Prefix
@@ -84,8 +85,8 @@ metadata:
   annotations:
     # auth-url can be set to `http://$host/oauth2/auth` or the following (more efficient?)
     nginx.ingress.kubernetes.io/auth-url: "http://auth-svc.default.svc.cluster.local:4180/oauth2/auth"
-    # The following auth-signin not working for different auth domain: "http://auth.127.0.0.1.nip.io/oauth2/start?rd=$pass_access_scheme://$http_host$escaped_request_uri"
-    nginx.ingress.kubernetes.io/auth-signin: "http://$host/oauth2/start?rd=$escaped_request_uri"
+    # auth-signin can be set to `http://$host/oauth2/start?rd=$escaped_request_uri` if sharing same domain as auth service
+    nginx.ingress.kubernetes.io/auth-signin: "http://auth.127.0.0.1.nip.io/oauth2/start?rd=$pass_access_scheme://$http_host$escaped_request_uri"
     # Specify headers to pass to backend once authentication request completes.
     nginx.ingress.kubernetes.io/auth-response-headers: "x-auth-request-user, x-auth-request-email, x-auth-request-preferred-username, authorization"
     # Fix for 'upstream sent too big header while reading response header from upstream'
