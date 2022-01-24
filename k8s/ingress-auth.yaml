@@ -22,11 +22,15 @@ spec:
         envFrom:
         - configMapRef:
             name: oauth2-proxy-common-config
+        - configMapRef:
+            name: oauth2-proxy-redis-config
         - secretRef:
             name: oauth2-proxy-common-secrets
         env:
         - name: OAUTH2_PROXY_UPSTREAMS
           value: "file:///dev/null"
+        - name: OAUTH2_PROXY_REDIS_CONNECTION_URL
+          value: "redis://redis-svc:6379/2"
         args:
         - "--email-domain=*"
         - "--skip-provider-button=true"
