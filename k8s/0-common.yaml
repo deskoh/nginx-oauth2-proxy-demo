@@ -16,6 +16,8 @@ data:
   OAUTH2_PROXY_COOKIE_SECURE: "false"
   # Important for cross-domain redirects
   OAUTH2_PROXY_WHITELIST_DOMAINS: .127.0.0.1.nip.io:*
+  # To allow clients that already obtained an access token to provide it in Authorization header
+  # OAUTH2_PROXY_SKIP_JWT_BEARER_TOKENS: true
 ---
 apiVersion: v1
 kind: Secret
