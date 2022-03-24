@@ -80,6 +80,14 @@ docker-compose up -d keycloak mariadb
 ngrok http 8080
 ```
 
+Create the following common resources.
+
+```sh
+kubectl apply -f k8s/0-common.yaml
+# Comment line in `oauth2-proxy-redis-config` if Redis storage is not to be used
+kubectl apply -f k8s/1-redis.yaml
+```
+
 ### Sidecar Deployment
 
 Thw following deployment runs OAuth2-Proxy a sidecar to protect resources within same pod.
@@ -116,3 +124,11 @@ kubectl apply -f k8s/ingress-auth.yaml
 [OAuth2 Proxy Configuration](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/overview)
 
 [NGINX Ingress Controller Annotations](https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/)
+
+## Troubleshooting
+
+```sh
+Error redeeming code during OAuth2 callback: email in id_token () isn't verified
+
+ Error creating session during OAuth2 callback: id_token did not contain an email and profileURL is not defined
+```

@@ -8,7 +8,8 @@ data:
   OAUTH2_PROXY_COOKIE_NAME: sso_sid
   OAUTH2_PROXY_CLIENT_ID: server
   # Provide public FQDN of IdP reacheable by the proxy and public client
-  OAUTH2_PROXY_OIDC_ISSUER_URL: http://a51d-118-189-149-221.ngrok.io/auth/realms/dev
+  OAUTH2_PROXY_OIDC_ISSUER_URL: https://5328-118-189-149-221.ngrok.io/auth/realms/dev
+  # To set domain to be 1-level higher to support dedicated auth domain name (see ingress-auth.yaml)
   OAUTH2_PROXY_COOKIE_DOMAINS: 127.0.0.1.nip.io
   # To set duration for token refresh (to set duration at most the validity of tokens)
   OAUTH2_PROXY_COOKIE_REFRESH: 5m
